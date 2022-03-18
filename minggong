@@ -30,7 +30,7 @@ for (i = 0; i <= 10; i++)
 system("color 1b");
 puts(a[i]);
 }
-break;//防止无限打印
+break;
 }
 char m;
 while (x!=l||y!=p)
