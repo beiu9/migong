@@ -1,0 +1,19 @@
+#include <stdio.h>
+int main()
+{
+	int i,k=0;
+	char a,aa[80];
+	printf("请输入你要一些英文;\n");
+	gets(aa);
+	printf("请输入你想统计的字符:\n");
+	scanf("%c",&a);
+	for(i=1;aa[i];i++)
+	{
+		if(aa[i]==a)
+		{
+			k++;
+		}
+	}
+	printf("%s中共有%d个%c",aa,k,a);
+	return 0;
+} 
