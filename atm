@@ -1,0 +1,52 @@
+#include<stdio.h>
+
+void signUp()
+{
+	
+}
+
+void signIn()
+{
+	
+}
+
+void showMenu(int language)
+{
+	if (language==1)
+	{
+
+	   printf("按1,开户\n");
+	   printf("按2,登陆\n");
+	}
+	else if (language==2)
+	{
+	     printf("press1,singUp\n");
+	     printf("press2,signIn\n");
+
+	}
+
+	int n;
+	scanf("%d",&n);
+	if(n==1)
+	{
+		signUp();
+	}
+	else if(n==1)
+	{
+		signIn();
+	}
+}
+
+int main()
+{
+	printf("欢迎来到CN银行\n");
+	printf("Welcome to XXX ban\n");
+	
+	int language;
+	printf("按1，中文\n");
+	printf("按2，Einglish\n");
+	scanf("%d",&language);
+	
+	showMenu(language);
+	return 0;	
+}
