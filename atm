@@ -1,52 +1,686 @@
 #include<stdio.h>
-
-void signUp()
+#include<stdlib.h>//exit(0)退出到系统函数
+#include<string.h>//strcmp(str1,str2)两个字符串比较是否相等的函数
+#include <windows.h>//Sleep()函数
+//定义储户的数据类型Account
+struct Account
 {
-	
-}
-
-void signIn()
-{
-	
-}
-
-void showMenu(int language)
-{
-	if (language==1)
-	{
-
-	   printf("按1,开户\n");
-	   printf("按2,登陆\n");
-	}
-	else if (language==2)
-	{
-	     printf("press1,singUp\n");
-	     printf("press2,signIn\n");
-
-	}
-
-	int n;
-	scanf("%d",&n);
-	if(n==1)
-	{
-		signUp();
-	}
-	else if(n==1)
-	{
-		signIn();
-	}
-}
-
+	int id;//卡号
+	char name[11];//储户姓名
+	char password[11];//密码
+	double money;//余额
+};
+struct Account bankAccount[40];//定义储户数组 用于保存银行的所有储户
+//定义全局变量
+int N=0; //保存储户的个数
+int cur,Max;
+FILE *file;//储户文件指针
+double Maxmoney=10000;//当日最大限额
+//声明函数原型
+int init();
+void welcome();
+void menu_login();
+int login();
+void menu_main();
+int qukuan();
+int  chaxun();
+void quit();
+int shuru(double);
+int cunkuan();
+int diy();
+int zhuanzhang();
+int zhuanzhang_1(int );
+int xiugai();
+int xiugai_1();
 int main()
 {
-	printf("欢迎来到CN银行\n");
-	printf("Welcome to XXX ban\n");
+	//1.初始化（init）
+    //将bankAccount_1.txt储户文件的储户数据读取内存bankAccount储户数组 
+	//目的：储户的存取款、转账操作在内存bankAccount储户数组中完成。
+	//好处：储户存取款操作直接在内存完成，不需要读写硬盘上的文件数据，提高效率。
+	char ch;
+	system("color fc");
+	if(init()==-1)
+	{
+		printf("系统初始化失败\n");
+		exit(0);
+	}   
+	welcome();//2.显示欢迎界面（welcome）
+   //3.登录（login）
+	if( login()==1)
+	{
+		cur=N;
+		printf("登录成功！加载中......\n");
+		Sleep(3000);
+	}
+	else
+	{
+		printf("登录失败！\n");
+		exit(0);
+	}
+	while(1)
+	{
+		int floag=0;
+
+		system("cls");
+
+	    menu_main();
+
+		ch=getchar();
+
+		if(ch<'1'||ch>'6')
+		{
+			printf("请输入有效数字\n");
+			continue;
+		}
 	
-	int language;
-	printf("按1，中文\n");
-	printf("按2，Einglish\n");
-	scanf("%d",&language);
+		switch(ch)
+		{
+
+		case '1' : qukuan();break;
+		case '2' : zhuanzhang();break;
+		case '3' : cunkuan();break;
+		case '4' : chaxun();break;
+		case '5' : xiugai();break;
+		case '6' : quit();;break;
+
+		}
+	}
+	return 0;
+}
+
+int xiugai()
+{
+	int userid;
+	char name[11];
+	int floag=0;
+	while(1)
+	{
+		system("cls");
+	    printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+	    printf("┃         修改密码           ┃\n");
+	    printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n");
+	    printf("请输入需要修改的账号（-1.返回）：\n");
+		scanf("%d",&userid);
+		getchar();
+		if(userid==-1)
+		{
+			return 1;
+		}
+		if(userid==0)
+		{
+			printf("账号不能为空！\n");
+			continue;
+		}
+		if(userid==bankAccount[cur].id)
+		{
+			printf("请输入用户名：\n");
+			gets(name);
+			if(strcmp(name,bankAccount[cur].name)==0)
+			{
+				xiugai_1();
+				break;
+			}
+			else
+			{
+				printf("用户名错误！\n");
+				continue;
+			}
+		}
+		else
+		{
+			printf("账号错误！\n");
+				continue;
+		}
 	
-	showMenu(language);
-	return 0;	
+	}
+	return 1;
+}
+
+
+int xiugai_1()
+{
+	int num=3;
+	char password1[7],password2[7];
+	while(1)
+	{
+		if(num==0)
+		{
+			printf("密码多次输入错误！即将返回主界面\n\n");
+			Sleep(3000);
+			return 1;
+		}
+		system("cls");
+	    printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+	    printf("┃           修改密码         ┃\n");
+	    printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n");
+	    printf("请输入新密码（剩余%d次机会）：\n",num-1);
+		gets(password1);
+		num--;
+		printf("请再次输入新密码：\n");
+		gets(password2);
+		if(strcmp(password1,password2)==0)
+		{
+			strcpy(bankAccount[cur].password,password2);
+			printf("密码修改成功！\n\n");
+			Sleep(3000);
+			return 1;
+		}
+		else
+		{   
+			printf("密码错误！请重新输入");
+			Sleep(2000);
+		}
+
+	}
+	
+
+
+	return 1;
+}
+
+int zhuanzhang()
+{
+	int userid;//储户卡号
+	char username[11];
+	int j,num=3,floag=0;
+	char ch;
+	while(1)
+	{
+	    system("cls");
+	    printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+	    printf("┃           转账           ┃\n");
+	    printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n");
+	    printf("请输入收款用户名（0.返回）：\n");
+        gets(username);
+	    if(strcmp(username,"0")==0)
+		    return 1;
+	    if(strlen(username)==0)
+	    {
+		    printf("账户不能为空，请重新输入！\n");
+				continue;
+	    }
+        for(j=0;j<Max;j++)
+		{
+			if(strcmp(username,bankAccount[j].name)==0)
+			{
+				floag=1;
+				break;
+			}
+		}
+
+	    if(floag==1)
+	    {
+		    printf("请输入收款账号：\n");
+		    scanf("%d",&userid);
+			getchar();
+		    if(bankAccount[j].id==userid)
+		    {
+				zhuanzhang_1(j);
+				break;
+		    }
+		    else
+		    {
+			    printf("用户账号错误！请重新输入");
+			    Sleep(2000);
+			    continue;
+		    }
+		}
+	    else
+	    {
+		    printf("账户名错误！请重新输入\n");
+		    Sleep(2000);
+		    continue;
+
+	    }
+	}
+	    printf("1.继续转账       2.返回\n");
+		getchar();
+	    ch=getchar();
+		getchar();
+		if(ch=='1')
+			zhuanzhang();
+		else
+	    	return 1;
+}
+
+int zhuanzhang_1(int j)
+{
+	double money;
+	int t;
+	while(1)
+	{
+		system("cls");
+		printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+		printf("┃           转账           ┃\n");
+		printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n\n");
+		printf("请输入转账金额：\n");
+		scanf("%lf",&money);
+		if(money<0)
+		{
+			printf("金额不能小于零！\n");
+			continue;
+		}
+		if(money>Maxmoney)
+		{
+			printf("金额不能大于当日限额！\n");
+			continue;
+		}
+		if((t=(int)money)%100!=0)
+		{
+			printf("转账金额只能为100的整数倍！\n");
+			continue;
+		}
+		bankAccount[cur].money-=money;
+		bankAccount[j].money+=money;
+		printf("转账成功！\n当前账户余额：%lf\n\n\n",bankAccount[cur].money);
+		return 1;
+}
+}
+
+
+int cunkuan()
+{
+	int t;
+	char ch;
+	double money;
+
+	  while(1)
+	  {
+		  system("cls");
+	      printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+	      printf("┃           存款           ┃\n");
+	      printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n");
+		  printf("请输入您的存款金额(0.返回)：\n\n");
+		  scanf("%lf",&money);
+		  if(money==0)
+			  return 1;
+		  if(money<0)
+		  {
+			  printf("金额不能小于零！\n");
+			  Sleep(2000);
+			  continue;
+		  }
+		  if(money>Maxmoney)
+		  {
+			  printf("金额不能大于当日限额！\n");
+			  Sleep(2000);
+			  continue;
+		  }
+		  
+		  if((t=(int)money)%100!=0)
+		  {
+			  printf("金额只能为100的整数倍！\n");
+			  Sleep(2000);
+			  continue;
+		  }
+		  bankAccount[N].money += money;
+	      printf("成功存入账户余额！\n");
+	      printf("当前余额：%0.2lf\n\n\n",bankAccount[N].money);
+	      do
+		  {
+		      printf("1.继续存款      2.返回\n");
+			  getchar();
+		      ch=getchar();
+			  getchar();
+		   if(ch<'1' || ch>'2')
+			  break;
+		  }while(ch<'1' || ch>'2');
+
+	      if(ch=='1')
+		  {
+			  cunkuan();
+		  }
+	      else
+		  {
+		      return 1;
+		  }
+	      break;
+	  }
+}
+
+int init()
+{
+	int i=0;
+	//1)调用fopen()函数，将bankAccount_1.txt储户文件信息读取到内存文件缓冲区
+	//通过file文件指针访问内存文件缓冲区储户文件数据
+	file=fopen("C:\\atm","r+");
+    if(file==NULL)
+		return -1;
+    //2)通过file文件指针读取所有的储户信息到内存的bankAccounts数组中
+	
+	//feof(file)：返回文件指针是否移到文件尾部 
+	//返回 0:没有到文件尾部
+	//返回 非零:到文件尾部
+
+	while(feof(file)==0)
+	{	
+		//fscanf()函数从文件读取数据到内存 如果读取到文件尾部 返回EOF
+		//调用fscanf()函数按格式一次读取一个储户的信息到bankAccounts[i]中
+		//文件指针file自动往后移动一个储户信息
+		fscanf(file,"%d %s %s %lf",&bankAccount[i].id,
+			                      bankAccount[i].name,
+			                      bankAccount[i].password,
+								  &bankAccount[i].money);
+	    i++;
+	}
+	Max=N=i;//储户的个数
+	//文件指针file已经移动到文件尾部
+	rewind(file);
+	return 1;
+}
+
+
+void welcome()
+{
+	printf("┍━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┑\n");
+	printf("┃           欢迎使用环太平洋银行 (*^_^*)     ┃\n");
+	printf("┃                                            ┃\n");
+	printf("┃                                            ┃\n"); 
+	printf("┃                                            ┃\n");
+	printf("┃热线电话：95865		             ┃\n");
+	printf("┕━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┙\n\n\n");
+
+}
+
+void quit()
+{
+	int i;
+	rewind(file);
+	for(i=0;i<Max;i++)
+	fprintf(file,"%d %s %s %lf\n",bankAccount[i].id,
+			                      bankAccount[i].name,
+			                      bankAccount[i].password,
+								  bankAccount[i].money);
+	system("cls");
+	printf("┍━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┑\n");
+	printf("┃           欢迎使用环太平洋银行 (*^_^*)     ┃\n");
+	printf("┃                                            ┃\n");
+	printf("┃                                            ┃\n");
+	printf("┃                                            ┃\n");
+	printf("┃感谢您的使用。                              ┃\n");
+	printf("┃                                            ┃\n");
+	printf("┃热线电话：95865		             ┃\n");
+	printf("┕━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┙\n\n\n");
+	
+	fclose(file);
+	Sleep(3000);
+	exit(0);
+}
+
+int  chaxun()
+{
+	int m;
+	printf("当前账户余额：%0.2lf 元\n\n\n\n\n",bankAccount[N].money);
+	printf("1.返回     0.退出\n\n");
+	scanf("%d",&m);
+	if(m==1)
+		return 1;
+	else
+		quit();
+}
+
+void menu_login()
+{
+	printf("1.登录\n0.退出\n");
+}
+
+
+int login()
+{ 
+	int userid;//储户卡号
+	int j,num=3,floag=1,curuserindex,i;
+	char ch;
+	char password[10];//储户密码
+
+	//0.显示登录界面（menu_login）
+	menu_login();
+	do
+	{
+    ch=getchar();
+	getchar();
+	if(ch<'0'||ch>'1')
+		printf("请输入有效数字！\n");
+	}while(ch<'0'||ch>'1');
+	if(ch=='1')
+	while(1)
+	{
+		num--;
+		printf("请输入储户的账号\n");
+		scanf("%d",&userid);
+		printf("请输入储户的密码\n");
+		scanf("%s",password);
+		
+			if(num==0)
+			{
+				printf("抱歉！您的输入次数已上限\n");
+				exit(0);
+			}
+			if(userid==0)
+			{
+				printf("账号不能为空，请重新输入！\n");
+				continue;
+			}
+			if(strlen(password)==0)
+			{
+				printf("密码不能为空，请重新输入！\n");
+				continue;
+			}
+			for(i=0;password[i];i++)
+				if(password[i] > '9'  ||  password[i] < '0')
+				{
+					floag=0;
+					break;
+				}
+		    if(floag==0)
+			{
+				printf("密码只能为数字，请重新输入！\n");
+					continue;
+			}
+			if(strlen(password)!=6)
+			{
+				printf("密码长度只能为六位，请重新输入！\n");
+				continue;
+			}
+			if(userid<100||userid>999)
+			{
+				printf("账号长度只能为三位，请重新输入！\n");
+				continue;
+			}
+		curuserindex=-1;
+		for(j=0;j<N;j++)
+		{
+			if(userid==bankAccount[j].id)
+			{
+
+				curuserindex=j;
+			    break;
+			}			
+		}
+		if(curuserindex==-1)
+		{
+			printf("账号错误，请重新输入！（还有%d次机会）\n",num);
+			continue;
+		}
+		else 
+		{
+			if(strcmp(password,bankAccount[curuserindex].password)==0)
+			{
+				N=curuserindex;
+				return 1;
+			}
+			else
+			{
+				printf("密码错误,请重新输入！（还有%d次机会）\n",num-1);
+				continue;
+			}
+		}
+	}
+	else
+			return -1;
+
+}
+
+void menu_main()//主界面
+{
+   printf("请选择您需要的服务：\n\n\n");
+   printf("1.储户取款     2.银行转账\n");
+   printf("3.储户存款     4.余额查询\n");
+   printf("5.修改密码     6.退出\n\n\n");
+
+}
+
+
+int qukuan()
+{
+	char ch;
+
+	system("cls");
+	while(1)
+	{
+	  printf("┎━━━━━━━━━━━━━━━━━━━━━━━━━━┒\n");
+	  printf("┃           取款           ┃\n");
+	  printf("┖━━━━━━━━━━━━━━━━━━━━━━━━━━┚\n");
+	  printf("请输入您的取款金额：\n\n");
+	  printf("1.100               2.200\n\n");
+	  printf("3.400               4.800\n\n");
+	  printf("5.1000              6.1500\n\n");
+	  printf("7.自定义            8.返回\n\n\n");
+	  printf("━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+	  getchar();
+	  do
+		{
+			
+			ch=getchar();
+			
+			if(ch>='1' && ch<='8')
+				break;
+			else
+				printf("请输入有效数字\n");
+
+		}while(ch<'1' || ch>'8');
+
+	  switch(ch)
+	  {
+	      case '1': shuru(100); break;
+		  case '2': shuru(200); break;
+		  case '3': shuru(400); break;
+		  case '4': shuru(800); break;
+		  case '5': shuru(1000); break;
+		  case '6': shuru(1500); break;
+		  case '7': diy(); break;
+		  case '8': return 1;
+	  }
+
+	}
+
+}
+
+int diy()
+{   int t;
+	double money;
+	char ch;
+	system("cls");
+	while(1)
+	{
+	  
+	  printf("请输入您的取款金额（0.返回）：\n");
+	  scanf("%lf",&money);
+	  if(money==0)
+	  {
+		  system("cls");
+		  return 1;
+	  }
+	  if(money<=0)
+	  {
+	   printf("金额必须大于零\n");
+	   continue;
+	  }
+	  if(money>Maxmoney)
+	  {
+	   printf("金额不能大于限额\n");
+	   continue;
+	  }
+	  if(money>bankAccount[N].money)
+	  {
+	   printf("余额不足\n");
+	   continue;
+	  }
+	  if((t=(int)money)%100!=0)
+	  {
+		  printf("取款金额只能为100的整数倍\n");
+		  continue;
+	  }
+
+	  bankAccount[N].money -= money;
+	  printf("取款成功！请取走您的钞票。\n");
+	  printf("当前余额：%0.2lf\n\n\n",bankAccount[N].money);
+	  do
+	  {
+		printf("1.继续取款      2.返回\n");
+		getchar();
+		ch=getchar();
+		if(ch<'1' || ch>'2')
+			break;
+	  }while(ch<'1' || ch>'2');
+
+	  if(ch=='1')
+		qukuan();
+	  else
+	  {
+		  system("cls");
+		return 1;
+	  }
+
+	  break;
+	}
+	return 1;
+}
+
+int shuru(double money)
+{
+
+	char ch;
+	if(money < bankAccount[N].money)
+	{
+		bankAccount[N].money -= money;
+		printf("取款成功！请取走您的钞票。\n");
+		printf("当前余额：%0.2lf\n\n\n",bankAccount[N].money);
+		do
+		{
+			getchar();
+			printf("1.继续取款      2.返回\n");
+			ch=getchar();
+
+		}while( ch<'1' || ch>'2' );
+		if(ch=='1')
+		{
+			system("cls");
+			qukuan();
+		}
+		else
+		{
+			system("cls");
+			return 1;
+			
+		}
+	}
+	else
+	{
+		printf("余额不足！\n");
+		do
+		{
+			getchar();
+			printf("1.返回      2.退出\n");
+			ch=getchar();
+		
+		}while(ch<'1' || ch>'2');
+		if(ch=='1')
+		{
+			system("cls");
+			return 1;
+		}
+		else
+			quit();
+	}
 }
